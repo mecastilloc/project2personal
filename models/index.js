@@ -1,12 +1,20 @@
 "use strict";
 
 var fs = require("fs");
+var util = require("util");
 var path = require("path");
+var mysql = require("mysql");
 var Sequelize = require("sequelize");
+var Op = Sequelize.Op;
 var basename = path.basename(module.filename);
 var env = process.env.NODE_ENV || "production";
 var config = require(__dirname + "/../config/config.json")[env];
 var db = {};
+
+
+// asdfasdfasdfasdfasd
+
+//  Generate database connection through Sequelize.
 
 if (config.use_env_variable) {
 
@@ -16,10 +24,10 @@ if (config.use_env_variable) {
 
   var sequelize = new Sequelize(
 
-    process.env.DATABASE,
-    process.env.USER_NAME,
-    process.env.PASSWORD, {
-      host: process.env.HOST,
+    process.env.DATABASE_2,
+    process.env.USER_NAME_2,
+    process.env.PASSWORD_2, {
+      host: "localhost",
       dialect: "mysql"
     }
 
@@ -27,7 +35,35 @@ if (config.use_env_variable) {
 
 }
 
-//  Read from "main/basic" folder.
+//  Generate database connection through mysql.
+
+if (config.use_env_variable) {
+
+  var connection = mysql.createConnection(process.env[config.use_env_variable]);
+
+} else {
+
+  var connection = mysql.createConnection({
+    host: "localhost",
+    port: process.env.PORT_2,
+    user: process.env.USER_NAME_2,
+    password: process.env.PASSWORD_2,
+    database: process.env.DATABASE_2
+  });
+
+}
+
+connection.connect(function (err) {
+	if (err) {
+		console.error("error connecting: " + err.stack);
+		return;
+	}
+
+  console.log("connected as id " + connection.threadId);
+  
+});
+
+//  Read models from "main/basic" folder.
 
 fs.readdirSync(path.join(__dirname, "./main/basic/"))
   .filter(function (file) {
@@ -40,7 +76,7 @@ fs.readdirSync(path.join(__dirname, "./main/basic/"))
     db[model.name] = model;
   });
 
-//  Read from "main/related" folder.
+//  Read models from "main/related" folder.
 
 fs.readdirSync(path.join(__dirname, "./main/related/"))
   .filter(function (file) {
@@ -53,7 +89,7 @@ fs.readdirSync(path.join(__dirname, "./main/related/"))
     db[model.name] = model;
   });
 
-//  Read from "main/mixed" folder.
+//  Read models from "main/mixed" folder.
 
 fs.readdirSync(path.join(__dirname, "./main/mixed/"))
   .filter(function (file) {
@@ -66,7 +102,7 @@ fs.readdirSync(path.join(__dirname, "./main/mixed/"))
     db[model.name] = model;
   });
 
-Object.keys(db).forEach(function (modelName) {
+Object.keys(db).forEach(function (modelName) {  // Iteration among all the property names "db" object has so far.
   if (db[modelName].associate) {
     db[modelName].associate(db);
   }
@@ -75,4 +111,7 @@ Object.keys(db).forEach(function (modelName) {
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
-module.exports = db;
+module.exports = {
+  "db": db,
+  "connection": connection
+}
